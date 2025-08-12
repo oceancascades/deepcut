@@ -70,7 +70,7 @@ def find_profiles(
     diffs = np.diff(pressure_smooth)
 
     if peaks_kwargs is None:
-        peaks_kwargs = {"height": 30, "distance": 500, "width": 500, "prominence": 30}
+        peaks_kwargs = {"height": 25, "distance": 500, "width": 500, "prominence": 25}
     if troughs_kwargs is None:
         troughs_kwargs = {"height": 25, "distance": 500, "width": 500, "prominence": 25}
 
@@ -101,5 +101,5 @@ def find_profiles(
                 end = i
                 break
 
-    segments.append((int(start), int(peak), int(end)))
+        segments.append((int(start), int(peak), int(end)))
     return segments

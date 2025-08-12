@@ -1,15 +1,18 @@
-from importlib.resources import files
-
 import numpy as np
 
-from deepcut import find_profiles
+from deepcut import find_profiles, get_example_data
+
+
+def test_get_example_data() -> None:
+    data = get_example_data()
+    assert data is not None
+    assert isinstance(data, np.ndarray)
 
 
 def test_find_profiles() -> None:
     # Load the pressure data
 
-    csv_path = str(files("tests") / "data/rbr_pressure.csv")
-    pressure = np.loadtxt(csv_path, delimiter=",", skiprows=2)
+    pressure = get_example_data()
 
     # Find the profiles
     profiles = find_profiles(pressure)
