@@ -25,7 +25,7 @@ To build and serve the documentation locally:
 	make html
 	```
 
-4. Serve the documentation locally:
+4. Serve the documentation locally (also runs the build step):
 	```sh
 	make serve
 	# Then open http://localhost:8000 in your browser
