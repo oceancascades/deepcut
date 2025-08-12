@@ -27,6 +27,6 @@ To build and serve the documentation locally:
 
 4. Serve the documentation locally:
 	```sh
-	python -m http.server --directory _build/html 8000
+	make serve
 	# Then open http://localhost:8000 in your browser
 	```
