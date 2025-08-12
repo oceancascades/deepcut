@@ -2,15 +2,15 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../src'))
+sys.path.insert(0, os.path.abspath("../src"))
 
-project = 'deepcut'
-author = 'Jesse Cusack'
-release = '0.1.0'
+project = "deepcut"
+author = "Jesse Cusack"
+release = "0.1.0"
 extensions = [
-    'myst_nb',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
+    "myst_nb",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
 ]
 
 myst_enable_extensions = [
@@ -27,11 +27,11 @@ myst_enable_extensions = [
 ]
 
 source_suffix = {
-    '.rst': 'restructuredtext',
-    '.md': 'myst-nb',
+    ".rst": "restructuredtext",
+    ".md": "myst-nb",
 }
 
-master_doc = 'index'
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-html_theme = 'sphinx_book_theme'
-nbsphinx_execute = 'always'
+master_doc = "index"
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+html_theme = "sphinx_book_theme"
+nbsphinx_execute = "always"
