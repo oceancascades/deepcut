@@ -1,6 +1,6 @@
 # deepcut - find profiles in ocean pressure data
 
-Under construction.
+See the [documentation](oceancascades.github.io/deepcut).
 
 # Building the documentation locally
 
@@ -30,8 +30,3 @@ To build and serve the documentation locally:
 	python -m http.server --directory _build/html 8000
 	# Then open http://localhost:8000 in your browser
 	```
-
-For live-reloading during edits, you can use:
-```sh
-sphinx-autobuild . _build/html
-```
