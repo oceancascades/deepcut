@@ -1,6 +1,6 @@
 # deepcut - find profiles in ocean pressure data
 
-See the [documentation](oceancascades.github.io/deepcut).
+See the [documentation](https://oceancascades.github.io/deepcut/).
 
 # Building the documentation locally
 
