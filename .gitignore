@@ -7,9 +7,12 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv
+.venv*
 
 # Caches
 .pytest_cache
 .ruff_cache
 .mypy_cache
+
+# Docs
+_build
