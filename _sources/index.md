@@ -9,7 +9,7 @@ kernelspec:
 
 # deepcut
 
-`deepcut` is a collection of algorithms for finding profiles from ocean pressure. 
+`deepcut` is a collection of algorithms for finding profiles in ocean pressure data. 
 
 # Usage
 
@@ -22,13 +22,13 @@ import importlib
 importlib.reload(deepcut)
 ```
 
-Currently the package contains one algorithm for identifying profiles, called `find_profiles`, which you can import it from the main package. 
+Currently the package contains just one algorithm for identifying profiles, called `find_profiles`, which you can import it from the main package. 
 
 ```{code-cell}
 from deepcut import get_example_data, find_profiles
 ```
 
-The function operates on pressure time series data, e.g.
+The function operates on pressure time series data with no explicit need for time information (it assumes uniformly spaced data) e.g.
 
 ```{code-cell}
 pressure = get_example_data()
@@ -67,11 +67,16 @@ HTML(fig.to_html(include_plotlyjs='cdn'))
 
 `find_profiles` accepts a number of arguments for fine-tuning profile identification. Underneath the hood it is applying `scipy` functions [`find_peaks`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html) and [`savgol_filter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.savgol_filter.html). Consequently, most of the arguments to `find_profiles` alter the behaviour of these functions and it is helpful to be familiar with their operation. 
 
-The sequence of events is roughly:
-* Data are smoothed to remove small-scale noise. (`window_length`, `polyorder`)
-* Pressure maxima are identified. (`peaks_kwargs`)
-* Pressure minima are identified, equivalent to searching for maxima in negative pressure. (`troughs_kwargs`)
-* The sequence of maxima and minima are cleaned up to get better estimates of where the profiles start and end. (`run_length`, `min_increase`, `min_decrease`)
+The profile finding algorithm roughly follows the steps below. The action of each step is modified by a set of arguments. 
+
+| Step    | Arguments modifying the step |
+| -------- | ------- |
+| 1. Data are smoothed to remove noise | `window_length`, `polyorder` |
+| 2. Pressure maxima are identified | `peaks_kwargs` |
+| 3. Pressure minima are identified, equivalent to searching for maxima in negative pressure | `troughs_kwargs` |
+| 4. Segments are cleaned up to get better estimates of where the profiles start and end | `run_length`, `min_increase`, `min_decrease` | 
+
+The results from the example above can be improved by modifying the peak finding steps. We identify by eye that some smaller peaks are missed, suggesting that we should decrease the minimum height and prominance thresholds when finding peaks and troughs. 
 
 ```{code-cell}
 peaks_kwargs = {"height": 15, "distance": 200, "width": 200, "prominence": 15}
