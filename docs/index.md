@@ -81,7 +81,7 @@ The results from the example above can be improved by modifying the peak finding
 ```{code-cell}
 peaks_kwargs = {"height": 15, "distance": 200, "width": 200, "prominence": 15}
 
-segments = find_profiles(pressure, peaks_kwargs=peaks_kwargs, troughs_kwargs=peaks_kwargs)
+segments = find_profiles(pressure, peaks_kwargs=peaks_kwargs)
 segments = np.asarray(segments)
 start = segments[:, 0]
 peak = segments[:, 1]

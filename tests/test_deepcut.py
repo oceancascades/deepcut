@@ -10,13 +10,7 @@ def test_get_example_data() -> None:
 
 
 def test_find_profiles() -> None:
-    # Load the pressure data
-
     pressure = get_example_data()
-
-    # Find the profiles
-    profiles = find_profiles(pressure)
-
-    # # Check that the profiles are found correctly
-    # assert len(profiles) > 0
-    # assert all(isinstance(profile, np.ndarray) for profile in profiles)
+    peaks_kwargs = {"height": 15, "distance": 200, "width": 200, "prominence": 15}
+    segments = find_profiles(pressure, peaks_kwargs=peaks_kwargs)
+    assert len(segments) == 12
