@@ -13,7 +13,6 @@ kernelspec:
 
 # Usage
 
-
 ```{code-cell}
 :tags: [hide-cell]
 # Ignore this (it is helpful for the local docs build.)
@@ -89,6 +88,32 @@ end = segments[:, 2]
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=x[cut], y=pressure[cut], mode="lines", name="pressure"))
+fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="start", marker_color="green"))
+fig.add_trace(go.Scatter(x=x[peak], y=pressure[peak], mode="markers", name="peak", marker_color="blue"))
+fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="end", marker_color="red"))
+fig.update_layout(yaxis_title="Pressure (dbar)", xaxis_title="Data index (-)", yaxis_autorange="reversed")
+HTML(fig.to_html(include_plotlyjs='cdn'))
+```
+
+# Glider example
+
+Gliders return decimated (low resolution) real-time pressure data and may undertake complex dive plans. The example
+below illustrates how to extract profiles in this case. Smoothing is probably unnecessary. 
+
+```{code-cell}
+from deepcut import synthetic_glider_pressure
+
+pressure = synthetic_glider_pressure()
+peaks_kwargs = {"height": 100, "distance": 5, "width": 5, "prominence": 100}
+segments = find_profiles(pressure, peaks_kwargs=peaks_kwargs, smoothing=False)
+segments = np.asarray(segments)
+start = segments[:, 0]
+peak = segments[:, 1]
+end = segments[:, 2]
+x = np.arange(0, pressure.size)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=x, y=pressure, mode="markers", name="pressure"))
 fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="start", marker_color="green"))
 fig.add_trace(go.Scatter(x=x[peak], y=pressure[peak], mode="markers", name="peak", marker_color="blue"))
 fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="end", marker_color="red"))
