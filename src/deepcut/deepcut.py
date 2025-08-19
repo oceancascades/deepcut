@@ -4,17 +4,19 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import find_peaks, savgol_filter
 
+_default_peaks_kwargs = {"height": 25, "distance": 500, "width": 500, "prominence": 25}
+
 
 def find_profiles(
     pressure: ArrayLike,
     window_length: int = 32,
     polyorder: int = 2,
+    smoothing: bool = True,
     run_length: int = 10,
     min_increase: float = 0.01,
     min_decrease: float = -0.01,
     peaks_kwargs: dict[str, Any] | None = None,
     troughs_kwargs: dict[str, Any] | None = None,
-    smoothing: bool = True,
 ) -> list[tuple[int, int, int]]:
     """
     Find profile segments in a pressure time series from a profiling instrument.
@@ -27,6 +29,9 @@ def find_profiles(
         Window length for Savitzky-Golay smoothing filter (default: 32).
     polyorder : int, optional
         Polynomial order for Savitzky-Golay filter (default: 2).
+    smoothing : bool, optional
+        If True (default), apply Savitzky-Golay smoothing to the pressure data before analysis.
+        If False, use the raw pressure data.
     run_length : int, optional
         Number of consecutive samples required to confirm descent/ascent (default: 10).
     min_increase : float, optional
@@ -36,10 +41,7 @@ def find_profiles(
     peaks_kwargs : dict, optional
         Dictionary of keyword arguments to pass to scipy.signal.find_peaks for peak detection.
     troughs_kwargs : dict, optional
-        Dictionary of keyword arguments to pass to scipy.signal.find_peaks for trough detection (applied to -pressure).
-    smoothing : bool, optional
-        If True (default), apply Savitzky-Golay smoothing to the pressure data before analysis.
-        If False, use the raw pressure data.
+        If not specified, the peaks_kwargs will be used.
 
     Returns
     -------
@@ -70,9 +72,9 @@ def find_profiles(
     diffs = np.diff(pressure_smooth)
 
     if peaks_kwargs is None:
-        peaks_kwargs = {"height": 25, "distance": 500, "width": 500, "prominence": 25}
+        peaks_kwargs = _default_peaks_kwargs
     if troughs_kwargs is None:
-        troughs_kwargs = {"height": 25, "distance": 500, "width": 500, "prominence": 25}
+        troughs_kwargs = peaks_kwargs
 
     peaks, _ = find_peaks(pressure_smooth, **peaks_kwargs)
     troughs, _ = find_peaks(pressure_smooth.max() - pressure_smooth, **troughs_kwargs)
