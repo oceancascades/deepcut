@@ -95,9 +95,7 @@ fig.update_layout(yaxis_title="Pressure (dbar)", xaxis_title="Data index (-)", y
 HTML(fig.to_html(include_plotlyjs='cdn'))
 ```
 
-We can also set a minimum pressure threshold for profiles to start and end. Note that this may not
-line up exactly with expectations when applying smoothing, since the smoothed pressure is used
-to identify points not meeting the threshold. 
+We can also set a minimum pressure threshold for profiles to start and end. Note that this may not line up exactly with expectations when applying smoothing, since the smoothed pressure is used to identify points not meeting the threshold. 
 
 ```{code-cell}
 segments = find_profiles(pressure, window_length=9, apply_smoothing=True, min_pressure=3.0, peaks_kwargs=peaks_kwargs)
@@ -117,8 +115,7 @@ HTML(fig.to_html(include_plotlyjs='cdn'))
 
 # Glider example
 
-Gliders return decimated (low resolution) real-time pressure data and may undertake complex dive plans. The example
-below illustrates how to extract profiles in this case. 
+Gliders return decimated (low resolution) real-time pressure data and may undertake complex dive plans. The example below illustrates how to extract profiles in this case. 
 
 ```{code-cell}
 from deepcut import synthetic_glider_pressure
@@ -144,12 +141,9 @@ HTML(fig.to_html(include_plotlyjs='cdn'))
 # Microstructure example
 
 Microstructure instruments, such as the vertical microstructure profiler (VMP) or glider-based MicroRider require
-additional constraints to identify profiles. The sensors needs to be moving fast enough through the water to collect
-useful data and data that fall outside of this speed threshold need to be discarded. Additionally, the MicroRider may
-only be turned on during a climb or dive, meaning that only half a profile of data are collected. 
+additional constraints to identify profiles. The sensors needs to be moving fast enough through the water to collect useful data and data that fall outside of this speed threshold need to be discarded. Additionally, the MicroRider may only be turned on during a climb or dive, meaning that only half a profile of data are collected. 
 
-Below, we create a toy model of a VMP that initially falls in free-fall, before being pulled up by a winch (constant force), 
-with the goal of simulating velocity changes experienced by a real instrument. 
+Below, we create a toy model of a VMP that initially falls in free-fall, before being pulled up by a winch (constant force), with the goal of simulating velocity changes experienced by a real instrument. 
 
 A possible system of differential equations for the instrument motion is:
 
@@ -160,8 +154,7 @@ $$
 \end{align*}
 $$
 
-where $z$ is the height, $w$ is the vertical velocity, $g$ is gravity, $m_v$ is the instrument mass, $m_w$ is the mass of water displaced, $C_d$ is the drag coefficient, $L$ is the hull length, and $T(t)$ is the time-dependent tension from the winch. These
-equations are solved in the code to produce a synthetic depth profile. We also mimic the sampling rate of a real VMP (60 Hz). 
+where $z$ is the height, $w$ is the vertical velocity, $g$ is gravity, $m_v$ is the instrument mass, $m_w$ is the mass of water displaced, $C_d$ is the drag coefficient, $L$ is the hull length, and $T(t)$ is the time-dependent tension from the winch. These equations are solved in the code to produce a synthetic depth profile. We also mimic the sampling rate of a real VMP (60 Hz). 
 
 
 ```{code-cell}
@@ -224,8 +217,7 @@ fig.update_layout(showlegend=False)
 HTML(fig.to_html(include_plotlyjs='cdn'))
 ```
 
-We can apply `find_profiles` to this synthetic data like before, but data when the instrument is moving
-slowly may not be properly excluded. 
+We can apply `find_profiles` to this synthetic data like before, but data when the instrument is moving slowly may not be properly excluded. 
 
 ```{code-cell}
 :tags: [hide-input]
