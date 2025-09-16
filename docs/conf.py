@@ -33,5 +33,13 @@ source_suffix = {
 
 master_doc = "index"
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
 html_theme = "sphinx_book_theme"
+html_theme_options = {
+    "repository_url": "https://github.com/oceancascades/deepcut",
+    "use_repository_button": True,
+    # Uncomment to add issues and edit page buttons:
+    # "use_issues_button": True,
+    # "use_edit_page_button": True,
+}
 nbsphinx_execute = "always"

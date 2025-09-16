@@ -1,7 +1,7 @@
 [project]
 name = "deepcut"
 version = "0.1.0"
-description = "Add your description here"
+description = "Functions to find profiles in ocean pressure data"
 readme = "README.md"
 authors = [
     { name = "Jesse Cusack", email = "jesse.cusack@oregonstate.edu" }
@@ -11,9 +11,16 @@ dependencies = [
     "numpy>=2.3.2",
     "scipy>=1.16.1",
 ]
+license = "GPL-3.0-or-later"
+license-files = ["LICEN[CS]E*"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
 
-[project.scripts]
-deepcut = "deepcut:main"
+[project.urls]
+Homepage = "https://oceancascades.github.io/deepcut/"
+source-code = "https://github.com/oceancascades/deepcut"
 
 [build-system]
 requires = ["hatchling"]
