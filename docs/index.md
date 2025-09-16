@@ -7,24 +7,24 @@ kernelspec:
   name: python3
 ---
 
-# deepcut
+# profinder
 
-`deepcut` is a collection of algorithms for finding profiles in ocean pressure data. 
+`profinder` is a collection of algorithms for finding profiles in ocean pressure data. 
 
 # Usage
 
 ```{code-cell}
 :tags: [hide-cell]
 # Ignore this (it is helpful for the local docs build.)
-import deepcut
+import profinder
 import importlib
-importlib.reload(deepcut)
+importlib.reload(profinder)
 ```
 
 Currently the package contains just one algorithm for identifying profiles, called `find_profiles`, which you can import from the main package. 
 
 ```{code-cell}
-from deepcut import get_example_data, find_profiles
+from profinder import get_example_data, find_profiles
 ```
 
 The function operates on pressure or depth time series data with no explicit need for time information (it assumes uniformly spaced data) e.g.
@@ -118,7 +118,7 @@ HTML(fig.to_html(include_plotlyjs='cdn'))
 Gliders return decimated (low resolution) real-time pressure data and may undertake complex dive plans. The example below illustrates how to extract profiles in this case. 
 
 ```{code-cell}
-from deepcut import synthetic_glider_pressure
+from profinder import synthetic_glider_pressure
 
 pressure = synthetic_glider_pressure()
 peaks_kwargs = {"height": 100, "distance": 5, "width": 5, "prominence": 100}

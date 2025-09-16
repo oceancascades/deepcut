@@ -1,5 +1,5 @@
 [project]
-name = "deepcut"
+name = "profinder"
 version = "0.1.1"
 description = "Functions to find profiles in ocean pressure data"
 readme = "README.md"
@@ -19,8 +19,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://oceancascades.github.io/deepcut/"
-source-code = "https://github.com/oceancascades/deepcut"
+Homepage = "https://oceancascades.github.io/profinder/"
+source-code = "https://github.com/oceancascades/profinder"
 
 [build-system]
 requires = ["hatchling"]
