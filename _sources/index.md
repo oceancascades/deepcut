@@ -19,6 +19,11 @@ kernelspec:
 import profinder
 import importlib
 importlib.reload(profinder)
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import numpy as np
+from IPython.display import HTML
 ```
 
 Currently the package contains just one algorithm for identifying profiles, called `find_profiles`, which you can import from the main package. 
@@ -44,10 +49,7 @@ print(segments)
 The default parameters may need to be changed to find the profiles properly. Note that some smaller profiles are not identified in the following example.
 
 ```{code-cell}
-import plotly.graph_objects as go
-import numpy as np
-from IPython.display import HTML
-
+:tags: [hide-input]
 segments = np.asarray(segments)
 start = segments[:, 0]
 peak = segments[:, 1]
@@ -79,8 +81,11 @@ The results from the example above can be improved by modifying the peak finding
 
 ```{code-cell}
 peaks_kwargs = {"height": 15, "distance": 200, "width": 200, "prominence": 15}
-
 segments = find_profiles(pressure, apply_smoothing=True, peaks_kwargs=peaks_kwargs)
+```
+
+```{code-cell}
+:tags: [hide-input]
 segments = np.asarray(segments)
 start = segments[:, 0]
 peak = segments[:, 1]
@@ -95,10 +100,21 @@ fig.update_layout(yaxis_title="Pressure (dbar)", xaxis_title="Data index (-)", y
 HTML(fig.to_html(include_plotlyjs='cdn'))
 ```
 
-We can also set a minimum pressure threshold for profiles to start and end. Note that this may not line up exactly with expectations when applying smoothing, since the smoothed pressure is used to identify points not meeting the threshold. 
+We can also set a minimum pressure threshold for profiles to start and end. Note that start and end pressures may not match this minimum exactly when applying smoothing. If it is important that the restriction be met exactly, add some buffer into the value (e.g. choose 3.5 dbar instead of 3 dbar). You can also increase the `run_length` to make sure that the instrument is going up/down for a sufficient number of points to consider the profile started. This removes some of the flatter regions inbetween profiles. 
 
 ```{code-cell}
-segments = find_profiles(pressure, window_length=9, apply_smoothing=True, min_pressure=3.0, peaks_kwargs=peaks_kwargs)
+segments = find_profiles(
+  pressure, 
+  apply_smoothing=True, 
+  window_length=9, 
+  min_pressure=3.0, 
+  run_length=10, 
+  peaks_kwargs=peaks_kwargs
+  )
+```
+
+```{code-cell}
+:tags: [hide-input]
 segments = np.asarray(segments)
 start = segments[:, 0]
 peak = segments[:, 1]
@@ -123,6 +139,10 @@ from profinder import synthetic_glider_pressure
 pressure = synthetic_glider_pressure()
 peaks_kwargs = {"height": 100, "distance": 5, "width": 5, "prominence": 100}
 segments = find_profiles(pressure, peaks_kwargs=peaks_kwargs)
+```
+
+```{code-cell}
+:tags: [hide-input]
 segments = np.asarray(segments)
 start = segments[:, 0]
 peak = segments[:, 1]
@@ -160,7 +180,6 @@ where $z$ is the height, $w$ is the vertical velocity, $g$ is gravity, $m_v$ is 
 ```{code-cell}
 :tags: [hide-input]
 from scipy.integrate import solve_ivp
-from plotly.subplots import make_subplots
 
 # Physical parameters
 mv = 14.0           # mass VMP (kg)
@@ -220,7 +239,16 @@ HTML(fig.to_html(include_plotlyjs='cdn'))
 We can apply `find_profiles` to this synthetic data like before, but data when the instrument is moving slowly may not be properly excluded. 
 
 ```{code-cell}
+segments_speed = find_profiles(-z, apply_speed_threshold=True, velocity=-w, min_speed=0.9, direction="down")
+```
+
+```{code-cell}
 :tags: [hide-input]
+segments_speed = np.asarray(segments_speed)
+down_start_speed = segments_speed[:, 0]
+down_end_speed = segments_speed[:, 1]
+up_start_speed = segments_speed[:, 2]
+up_end_speed = segments_speed[:, 3]
 
 segments = find_profiles(-z)
 segments = np.asarray(segments)
@@ -228,13 +256,6 @@ down_start = segments[:, 0]
 down_end = segments[:, 1]
 up_start = segments[:, 2]
 up_end = segments[:, 3]
-
-segments_speed = find_profiles(-z, apply_speed_threshold=True, velocity=-w, min_speed=0.9, direction="down")
-segments_speed = np.asarray(segments_speed)
-down_start_speed = segments_speed[:, 0]
-down_end_speed = segments_speed[:, 1]
-up_start_speed = segments_speed[:, 2]
-up_end_speed = segments_speed[:, 3]
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=t, y=z, mode="lines", name="z"))
@@ -250,5 +271,40 @@ fig.add_trace(go.Scatter(x=t[up_start_speed], y=z[up_start_speed], mode="markers
 fig.add_trace(go.Scatter(x=t[up_end_speed], y=z[up_end_speed], mode="markers", name="up end (speed)", marker=dict(color="orange", symbol="diamond")))
 
 fig.update_layout(yaxis_title="z (m)", xaxis_title="Time (s)")
+HTML(fig.to_html(include_plotlyjs='cdn'))
+```
+
+# Handling missing data
+
+Returning to the glider example, what if there are missing data? One supported approach is to drop the missing data. 
+
+```{code-cell}
+np.random.seed(14123)
+
+pressure = synthetic_glider_pressure(n_points=1000)
+
+pressure[::8] = np.nan
+pressure[::9] = np.nan
+indices = np.random.choice(pressure.size, 50, replace=False)
+pressure[indices] = np.nan
+
+peaks_kwargs = {"height": 100, "distance": 5, "width": 5, "prominence": 100}
+segments = find_profiles(pressure, peaks_kwargs=peaks_kwargs, missing="drop")
+```
+
+```{code-cell}
+:tags: [hide-input]
+segments = np.asarray(segments)
+start = segments[:, 0]
+peak = segments[:, 1]
+end = segments[:, 3]
+x = np.arange(0, pressure.size)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=x, y=pressure, mode="markers", name="pressure"))
+fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="start", marker_color="green"))
+fig.add_trace(go.Scatter(x=x[peak], y=pressure[peak], mode="markers", name="peak", marker_color="blue"))
+fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="end", marker_color="red"))
+fig.update_layout(yaxis_title="Pressure (dbar)", xaxis_title="Data index (-)", yaxis_autorange="reversed")
 HTML(fig.to_html(include_plotlyjs='cdn'))
 ```
