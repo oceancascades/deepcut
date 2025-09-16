@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 
-from deepcut import find_profiles, get_example_data, synthetic_glider_pressure
+from profinder import find_profiles, get_example_data, synthetic_glider_pressure
 
 
 def test_get_example_data() -> None:

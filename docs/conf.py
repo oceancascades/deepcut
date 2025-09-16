@@ -1,10 +1,10 @@
-# Sphinx configuration for deepcut documentation
+# Sphinx configuration for profinder documentation
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../src"))
 
-project = "deepcut"
+project = "profinder"
 author = "Jesse Cusack"
 release = "0.1.0"
 extensions = [
@@ -36,7 +36,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_book_theme"
 html_theme_options = {
-    "repository_url": "https://github.com/oceancascades/deepcut",
+    "repository_url": "https://github.com/oceancascades/profinder",
     "use_repository_button": True,
     # Uncomment to add issues and edit page buttons:
     # "use_issues_button": True,

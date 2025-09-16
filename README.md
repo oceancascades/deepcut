@@ -1,8 +1,8 @@
-# deepcut
+# profinder
 
 This package provides functions for finding profiles in ocean pressure data. It builds on [`scipy.signal.find_peaks`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html).
 
-See the [documentation](https://oceancascades.github.io/deepcut/) for more details.
+See the [documentation](https://oceancascades.github.io/profinder/) for more details.
 
 # Building the documentation locally
 
