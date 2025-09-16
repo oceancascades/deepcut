@@ -1,6 +1,6 @@
 [project]
 name = "deepcut"
-version = "0.1.0"
+version = "0.1.1"
 description = "Functions to find profiles in ocean pressure data"
 readme = "README.md"
 authors = [
