@@ -4,7 +4,7 @@ This package provides functions for finding profiles in ocean pressure data. It 
 
 See the [documentation](https://oceancascades.github.io/profinder/) for more details.
 
-# Building the documentation locally
+## Building the documentation locally
 
 To build and serve the documentation locally:
 
@@ -32,3 +32,21 @@ To build and serve the documentation locally:
 	make serve
 	# Then open http://localhost:8000 in your browser
 	```
+
+## Publishing
+
+First generate an API token at [pypi.org](pypi.org) and store in `~/.pypirc`. 
+
+Make sure to the bump the version appropriately.
+
+```
+uv version --bump <major/minor/patch>
+```
+
+Remove any existing distributions, build, and publish.
+
+```
+rm -rf dist
+uv build
+uvx twine upload dist/*
+```

@@ -33,6 +33,28 @@ def test_find_profiles() -> None:
     segments = find_profiles(pressure, apply_smoothing=False, peaks_kwargs=peaks_kwargs)
     assert len(segments) == 6
 
+    # Handling missing
+    np.random.seed(14123)
+
+    pressure = synthetic_glider_pressure(
+        n_points=1000, max_p=500.0, intermediate_p=200.0, n_cycles=5
+    )
+
+    # Add NaN
+    pressure[::8] = np.nan
+    pressure[::9] = np.nan
+    indices = np.random.choice(pressure.size, 50, replace=False)
+    pressure[indices] = np.nan
+
+    peaks_kwargs = {"height": 100, "distance": 5, "width": 5, "prominence": 100}
+    segments = find_profiles(
+        pressure,
+        apply_smoothing=False,
+        peaks_kwargs=peaks_kwargs,
+        missing="drop",
+    )
+    assert len(segments) == 6
+
 
 def test_velocity() -> None:
     # Crazy test using a fake VMP
