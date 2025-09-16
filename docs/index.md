@@ -34,7 +34,7 @@ pressure = get_example_data()
 print(pressure[:10])
 ```
 
-It will identify up and down pairs in the data. We call the individual up or down parts yos, following Slocum glider jargon. Each yo in a profile defined by start and end points, `(down_start, down_end, up_start, up_end)`. If you are not applying a speed threshold, then down_end and up_start will be identical. 
+It will identify up and down pairs in the data. Each up or down part in a profile is defined by start and end indexes, `(down_start, down_end, up_start, up_end)`. If you are not applying a speed threshold, then down_end and up_start will be identical.
 
 ```{code-cell}
 segments = find_profiles(pressure)
