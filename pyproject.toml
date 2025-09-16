@@ -20,6 +20,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://oceancascades.github.io/deepcut/"
+source-code = "https://github.com/oceancascades/deepcut"
 
 [build-system]
 requires = ["hatchling"]
