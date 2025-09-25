@@ -262,7 +262,7 @@ def _find_profiles(
 
         # Ensure a robust run_length of increasing pressure toward the peak
         de = int(peak)
-        for i in range(max(start, 0), max(peak - run_length, start) + 1):
+        for i in range(max(int(start), 0), max(int(peak - run_length), int(start)) + 1):
             # Find the latest window that ends at or before the peak
             if (
                 np.all(diffs[i : i + run_length] > min_pressure_change)
@@ -279,7 +279,7 @@ def _find_profiles(
                 us = int(j - run_length)
                 break
         # Ensure us within [peak, end-1]
-        us = min(max(us, int(peak)), int(max(peak, end - 1)))
+        us = min(max(int(us), int(peak)), int(max(int(peak), int(end - 1))))
 
         # (down_start, down_end, up_start, up_end)
         profiles.append((int(start), int(de), int(us), int(end)))
