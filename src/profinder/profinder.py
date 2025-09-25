@@ -65,10 +65,6 @@ def _validate_pressure(
         Savitzky-Golay window length (must be odd and >= polyorder+2).
     polyorder : int
         Polynomial order for Savitzky-Golay.
-    missing : {'raise','drop'}
-        How to handle missing/non-finite values in the input pressure data.
-        'raise' (default) will raise an error if any non-finite values are found.
-        'drop' will remove any non-finite values from the input data before processing.
 
     Returns
     -------
@@ -105,7 +101,7 @@ def _find_segment(
     min_speed: float = 0.2,
     direction: Literal["up", "down", "both"] = "down",
 ) -> Tuple[int, int]:
-    """Find the start/end indices of a single yo (one down or up segment).
+    """Find the start and end indices of a single down or up segment.
 
     Parameters
     ----------
@@ -129,7 +125,7 @@ def _find_segment(
     Returns
     -------
     (start, end) : tuple[int, int]
-        Index bounds (inclusive start, exclusive end) of the longest valid yo.
+        Index bounds (inclusive start, exclusive end) of the longest valid segment.
     """
 
     p = np.asarray(pressure, dtype=float)
@@ -229,60 +225,56 @@ def _find_profiles(
     peaks, _ = find_peaks(pressure, **peaks_kwargs)
     troughs, _ = find_peaks(pressure.max() - pressure, **troughs_kwargs)
 
-    profiles: List[ProfileTuple] = []
-    for peak in peaks:
+    profiles = []
+    for peak_idx in peaks:
+        # Ensure peak is an int to keep mypy happy
+        peak = int(peak_idx)
+
         # Find surface point before peak
         trough_before = troughs[troughs < peak]
-        start = trough_before[-1] if len(trough_before) > 0 else 0
+        ds = int(trough_before[-1]) if len(trough_before) > 0 else 0
 
         # Move start forward to first robust descent
-        for i in range(start, peak - run_length):
+        for i in range(ds, peak - run_length):
             if np.all(diffs[i : i + run_length] > min_pressure_change):
-                start = i
+                ds = i
                 break
 
         # Move start to adjust for min_pressure
-        while start + 1 < peak and pressure[start + 1] < min_pressure:
-            start += 1
+        while ds + 1 < peak and pressure[ds + 1] < min_pressure:
+            ds += 1
 
         # Find surface point after peak
         trough_after = troughs[troughs > peak]
-        end = trough_after[0] if len(trough_after) > 0 else ndata - 1
+        ue = int(trough_after[0]) if len(trough_after) > 0 else ndata - 1
 
         # Move end backward to last robust ascent
-        for i in range(end, peak + run_length, -1):
+        for i in range(ue, peak + run_length, -1):
             if i - run_length >= peak and np.all(
                 diffs[i - run_length : i] < -min_pressure_change
             ):
-                end = i
+                ue = i
                 break
 
-        while end - 1 > peak and pressure[end - 1] < min_pressure:
-            end -= 1
+        while ue - 1 > peak and pressure[ue - 1] < min_pressure:
+            ue -= 1
 
         # Ensure a robust run_length of increasing pressure toward the peak
-        de = int(peak)
-        for i in range(max(int(start), 0), max(int(peak - run_length), int(start)) + 1):
-            # Find the latest window that ends at or before the peak
-            if (
-                np.all(diffs[i : i + run_length] > min_pressure_change)
-                and (i + run_length) <= peak
-            ):
-                de = int(i + run_length)
-        # Ensure de is within [start+1, peak]
-        de = max(min(de, int(peak)), int(start + 1))
+        de = peak
+        for i in range(peak, ds + run_length, -1):
+            if np.all(diffs[i - run_length : i] > min_pressure_change):
+                de = i
+                break
 
         # Ensure a robust run_length of decreasing pressure away from the peak
-        us = int(peak)
-        for j in range(int(peak + run_length), int(end) + 1):
-            if np.all(diffs[j - run_length : j] < -min_pressure_change):
-                us = int(j - run_length)
+        us = peak
+        for i in range(peak, ue - run_length + 1):
+            if np.all(diffs[i : i + run_length] < -min_pressure_change):
+                us = i
                 break
-        # Ensure us within [peak, end-1]
-        us = min(max(int(us), int(peak)), int(max(int(peak), int(end - 1))))
 
         # (down_start, down_end, up_start, up_end)
-        profiles.append((int(start), int(de), int(us), int(end)))
+        profiles.append((ds, de, us, ue))
 
     if not apply_speed_threshold:
         return profiles
@@ -347,7 +339,7 @@ def find_segment(
     min_speed: float = 0.2,
     direction: Literal["up", "down", "both"] = "down",
 ) -> Tuple[int, int]:
-    """Find the start/end indices of a single yo (one down or up segment).
+    """Find the start and end indices of a single down or up segment
 
     Parameters
     ----------
@@ -372,7 +364,7 @@ def find_segment(
     Returns
     -------
     (start, end) : tuple[int, int]
-        Index bounds (inclusive start, exclusive end) of the longest valid yo.
+        Index bounds (inclusive start, exclusive end) of the longest valid segment.
     """
 
     if apply_speed_threshold and (time is None and velocity is None):
@@ -531,10 +523,10 @@ def find_profiles(
     if (missing == "drop") and (len(profiles) > 0):
         profiles = [
             (
-                int(valid_idx[ds]),
-                int(valid_idx[de]),
-                int(valid_idx[us]),
-                int(valid_idx[ue]),
+                valid_idx[ds],
+                valid_idx[de],
+                valid_idx[us],
+                valid_idx[ue],
             )
             for (ds, de, us, ue) in profiles
         ]
