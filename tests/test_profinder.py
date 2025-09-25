@@ -102,9 +102,12 @@ def test_velocity() -> None:
     t_uniform = np.arange(0, sol.t[-1], dt)
     z = np.interp(t_uniform, sol.t, sol.y[0])
     w = np.interp(t_uniform, sol.t, sol.y[1])
-    # t = t_uniform
 
     segments_speed = find_profiles(
-        -z, apply_speed_threshold=True, velocity=-w, min_speed=0.9, direction="down"
+        -z,
+        apply_speed_threshold=True,
+        velocity=-w,
+        min_speed=0.9,
+        direction="down",
     )
     assert len(segments_speed) == 1
