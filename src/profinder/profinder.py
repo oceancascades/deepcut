@@ -11,7 +11,7 @@ from scipy.signal import find_peaks, savgol_filter
 FloatArray = NDArray[np.floating]
 ProfileTuple = Tuple[int, int, int, int]
 
-__all__ = ["find_profiles", "find_yo"]
+__all__ = ["find_profiles", "find_segment"]
 
 _default_peaks_kwargs = {"height": 25, "distance": 200, "width": 200, "prominence": 25}
 
@@ -95,7 +95,7 @@ def _validate_pressure(
     return pressure
 
 
-def _find_yo(
+def _find_segment(
     pressure: ArrayLike,
     apply_min_pressure: bool = True,
     min_pressure: float = -1.0,
@@ -180,7 +180,7 @@ def _find_profiles(
     troughs_kwargs: dict[str, Any],
     min_pressure: float = -1.0,
     run_length: int = 4,
-    min_pressure_change: float = 0.01,
+    min_pressure_change: float = 0.0,
     apply_speed_threshold: bool = False,
     time: Optional[ArrayLike] = None,
     velocity: Optional[ArrayLike] = None,
@@ -221,12 +221,6 @@ def _find_profiles(
         List of (down_start, down_end, up_start, up_end) index tuples for each detected profile.
         If no speed threshold is applied the middle two indices will be identical (peak).
 
-    Notes
-    -----
-    - The function can use Savitzky-Golay smoothing to reduce noise if smoothing=True.
-    - Profile start and end indices are refined to avoid long periods near the surface.
-    - Troughs are detected as local minima in the (optionally smoothed) pressure signal.
-    - Additional arguments for peak/trough detection can be passed via peaks_kwargs and troughs_kwargs.
     """
 
     ndata = pressure.size
@@ -266,19 +260,37 @@ def _find_profiles(
         while end - 1 > peak and pressure[end - 1] < min_pressure:
             end -= 1
 
+        # Ensure a robust run_length of increasing pressure toward the peak
+        de = int(peak)
+        for i in range(max(start, 0), max(peak - run_length, start) + 1):
+            # Find the latest window that ends at or before the peak
+            if np.all(diffs[i : i + run_length] > min_pressure_change) and (i + run_length) <= peak:
+                de = int(i + run_length)
+        # Ensure de is within [start+1, peak]
+        de = max(min(de, int(peak)), int(start + 1))
+
+        # Ensure a robust run_length of decreasing pressure away from the peak
+        us = int(peak)
+        for j in range(int(peak + run_length), int(end) + 1):
+            if np.all(diffs[j - run_length : j] < -min_pressure_change):
+                us = int(j - run_length)
+                break
+        # Ensure us within [peak, end-1]
+        us = min(max(us, int(peak)), int(max(peak, end - 1)))
+
         # (down_start, down_end, up_start, up_end)
-        profiles.append((int(start), int(peak), int(peak), int(end)))
+        profiles.append((int(start), int(de), int(us), int(end)))
 
     if not apply_speed_threshold:
         return profiles
 
-    def _refine_segment(
+    def refine_segment(
         segment_pressure: FloatArray,
         seg_time: Optional[ArrayLike],
         seg_velocity: Optional[ArrayLike],
         seg_direction: Literal["up", "down"],
     ) -> Tuple[int, int]:
-        return _find_yo(
+        return _find_segment(
             segment_pressure,
             apply_min_pressure=False,
             apply_speed_threshold=True,
@@ -292,7 +304,7 @@ def _find_profiles(
     for idx, (ds, de, us, ue) in enumerate(profiles):
         # Down portion refinement
         if direction in ("down", "both"):
-            ds_off, de_off = _refine_segment(
+            ds_off, de_off = refine_segment(
                 pressure[ds:de],
                 None if time is None else np.asarray(time)[ds:de],
                 None if velocity is None else np.asarray(velocity)[ds:de],
@@ -304,7 +316,7 @@ def _find_profiles(
 
         # Up portion refinement
         if direction in ("up", "both"):
-            us_off, ue_off = _refine_segment(
+            us_off, ue_off = refine_segment(
                 pressure[us:ue],
                 None if time is None else np.asarray(time)[us:ue],
                 None if velocity is None else np.asarray(velocity)[us:ue],
@@ -319,7 +331,7 @@ def _find_profiles(
     return profiles
 
 
-def find_yo(
+def find_segment(
     pressure: ArrayLike,
     apply_smoothing: bool = False,
     window_length: int = 9,
@@ -374,7 +386,7 @@ def find_yo(
     if not apply_min_pressure and not apply_speed_threshold:
         return 0, p.size - 1
 
-    start, end = _find_yo(
+    start, end = _find_segment(
         p,
         apply_min_pressure=apply_min_pressure,
         min_pressure=min_pressure,
@@ -450,12 +462,6 @@ def find_profiles(
         List of (down_start, down_end, up_start, up_end) index tuples for each detected profile.
         If no speed threshold is applied the middle two indices will be identical (peak).
 
-    Notes
-    -----
-    - The function can use Savitzky-Golay smoothing to reduce noise if smoothing=True.
-    - Profile start and end indices are refined to avoid long periods near the surface.
-    - Troughs are detected as local minima in the (optionally smoothed) pressure signal.
-    - Additional arguments for peak/trough detection can be passed via peaks_kwargs and troughs_kwargs.
     """
 
     if apply_speed_threshold and (time is None and velocity is None):

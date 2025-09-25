@@ -32,41 +32,43 @@ Currently the package contains just one algorithm for identifying profiles, call
 from profinder import get_example_data, find_profiles
 ```
 
-The function operates on pressure or depth time series data with no explicit need for time information (it assumes uniformly spaced data) e.g.
+The function operates on pressure or depth time series data with no explicit need for time information. It assumes uniformly spaced data, but will still mostly work in the case that data are not uniform. The pressure data in the examples come from a 32 Hz RBR Concerto profiling in an icy Alaskan fjord. You can get the example data using:
 
 ```{code-cell}
 pressure = get_example_data()
 print(pressure[:10])
 ```
 
-It will identify up and down pairs in the data. Each up or down part in a profile is defined by start and end indexes, `(down_start, down_end, up_start, up_end)`. If you are not applying a speed threshold, then down_end and up_start will be identical.
+The find_profiles function will identify up and down pairs in the data. Each up or down part in a profile is defined by start and end indexes, `(down_start, down_end, up_start, up_end)`. The down_end and up_start will sometimes be identical for sharp profiles, or if speed thresholding options are not selected.
 
 ```{code-cell}
 segments = find_profiles(pressure)
 print(segments)
 ```
 
-The default parameters may need to be changed to find the profiles properly. Note that some smaller profiles are not identified in the following example.
+The default parameters may need to be changed to find the profiles properly. Note that some smaller profiles are not identified in the following example. Zoom in to see the different between down end and up start locations.
 
 ```{code-cell}
 :tags: [hide-input]
 segments = np.asarray(segments)
 start = segments[:, 0]
-peak = segments[:, 1]
+down_end = segments[:, 1]
+up_start = segments[:, 2]
 end = segments[:, 3]
 x = np.arange(0, pressure.size)
 cut = slice(0, None, 8)  # reduce data for plotting
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=x[cut], y=pressure[cut], mode="lines", name="pressure"))
-fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="start", marker_color="green"))
-fig.add_trace(go.Scatter(x=x[peak], y=pressure[peak], mode="markers", name="peak", marker_color="blue"))
-fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="end", marker_color="red"))
+fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="down start", marker_color="green"))
+fig.add_trace(go.Scatter(x=x[down_end], y=pressure[down_end], mode="markers", name="down end", marker_color="blue"))
+fig.add_trace(go.Scatter(x=x[up_start], y=pressure[up_start], mode="markers", name="up start", marker_color="darkviolet"))
+fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="up end", marker_color="red"))
 fig.update_layout(yaxis_title="Pressure (dbar)", xaxis_title="Data index (-)", yaxis_autorange="reversed")
 HTML(fig.to_html(include_plotlyjs='cdn'))
 ```
 
-`find_profiles` accepts a number of arguments for fine-tuning profile identification. Underneath the hood it is applying `scipy` functions [`find_peaks`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html) and [`savgol_filter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.savgol_filter.html). Consequently, most of the arguments to `find_profiles` alter the behaviour of these functions and it is helpful to be familiar with their operation. 
+`find_profiles` accepts a number of arguments for fine-tuning profile identification. Underneath the hood it is applying `scipy` functions [`find_peaks`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html) and [`savgol_filter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.savgol_filter.html). Consequently, a lot of the arguments to `find_profiles` alter the behaviour of these functions and it is helpful to be familiar with their operation. 
 
 The profile finding algorithm roughly follows the steps below. The action of each step is modified by a set of arguments. 
 
@@ -88,19 +90,23 @@ segments = find_profiles(pressure, apply_smoothing=True, peaks_kwargs=peaks_kwar
 :tags: [hide-input]
 segments = np.asarray(segments)
 start = segments[:, 0]
-peak = segments[:, 1]
+down_end = segments[:, 1]
+up_start = segments[:, 2]
 end = segments[:, 3]
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=x[cut], y=pressure[cut], mode="lines", name="pressure"))
-fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="start", marker_color="green"))
-fig.add_trace(go.Scatter(x=x[peak], y=pressure[peak], mode="markers", name="peak", marker_color="blue"))
-fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="end", marker_color="red"))
+fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="down start", marker_color="green"))
+fig.add_trace(go.Scatter(x=x[down_end], y=pressure[down_end], mode="markers", name="down end", marker_color="blue"))
+fig.add_trace(go.Scatter(x=x[up_start], y=pressure[up_start], mode="markers", name="up start", marker_color="darkviolet"))
+fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="up end", marker_color="red"))
 fig.update_layout(yaxis_title="Pressure (dbar)", xaxis_title="Data index (-)", yaxis_autorange="reversed")
 HTML(fig.to_html(include_plotlyjs='cdn'))
 ```
 
-We can also set a minimum pressure threshold for profiles to start and end. Note that start and end pressures may not match this minimum exactly when applying smoothing. If it is important that the restriction be met exactly, add some buffer into the value (e.g. choose 3.5 dbar instead of 3 dbar). You can also increase the `run_length` to make sure that the instrument is going up/down for a sufficient number of points to consider the profile started. This removes some of the flatter regions inbetween profiles. 
+We can also set a minimum pressure threshold for profiles to start and end. Note that start and end pressures may not match this minimum exactly when applying smoothing. If it is important that the restriction be met exactly while smoothing, add some buffer into the value (e.g. choose 3.5 dbar instead of 3 dbar) or don't smooth. 
+
+You can also increase the `run_length` to make sure that the instrument is going up/down for a sufficient number of points to consider the profile started and ended. This argument is coupled with `min_pressure_change`, which defines the minimum pressure changes between each point in the run. For example, if your profile starts with pressure values [1, 2, 5, 8, ...] and you have a run length of 2 and minimum pressure change of 2, the profile would start at the value 2, because the although the pressure is always increasing, the change between 1 and 2 does not exceed the minimum. This removes some of the flatter regions in data. 
 
 ```{code-cell}
 segments = find_profiles(
@@ -117,14 +123,16 @@ segments = find_profiles(
 :tags: [hide-input]
 segments = np.asarray(segments)
 start = segments[:, 0]
-peak = segments[:, 1]
+down_end = segments[:, 1]
+up_start = segments[:, 2]
 end = segments[:, 3]
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=x[cut], y=pressure[cut], mode="lines", name="pressure"))
-fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="start", marker_color="green"))
-fig.add_trace(go.Scatter(x=x[peak], y=pressure[peak], mode="markers", name="peak", marker_color="blue"))
-fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="end", marker_color="red"))
+fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="down start", marker_color="green"))
+fig.add_trace(go.Scatter(x=x[down_end], y=pressure[down_end], mode="markers", name="down end", marker_color="blue"))
+fig.add_trace(go.Scatter(x=x[up_start], y=pressure[up_start], mode="markers", name="up start", marker_color="darkviolet"))
+fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="up end", marker_color="red"))
 fig.update_layout(yaxis_title="Pressure (dbar)", xaxis_title="Data index (-)", yaxis_autorange="reversed")
 HTML(fig.to_html(include_plotlyjs='cdn'))
 ```
@@ -145,15 +153,17 @@ segments = find_profiles(pressure, peaks_kwargs=peaks_kwargs)
 :tags: [hide-input]
 segments = np.asarray(segments)
 start = segments[:, 0]
-peak = segments[:, 1]
+down_end = segments[:, 1]
+up_start = segments[:, 2]
 end = segments[:, 3]
 x = np.arange(0, pressure.size)
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=x, y=pressure, mode="markers", name="pressure"))
-fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="start", marker_color="green"))
-fig.add_trace(go.Scatter(x=x[peak], y=pressure[peak], mode="markers", name="peak", marker_color="blue"))
-fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="end", marker_color="red"))
+fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="down start", marker_color="green"))
+fig.add_trace(go.Scatter(x=x[down_end], y=pressure[down_end], mode="markers", name="down end", marker_color="blue"))
+fig.add_trace(go.Scatter(x=x[up_start], y=pressure[up_start], mode="markers", name="up start", marker_color="darkviolet"))
+fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="up end", marker_color="red"))
 fig.update_layout(yaxis_title="Pressure (dbar)", xaxis_title="Data index (-)", yaxis_autorange="reversed")
 HTML(fig.to_html(include_plotlyjs='cdn'))
 ```
@@ -296,15 +306,17 @@ segments = find_profiles(pressure, peaks_kwargs=peaks_kwargs, missing="drop")
 :tags: [hide-input]
 segments = np.asarray(segments)
 start = segments[:, 0]
-peak = segments[:, 1]
+down_end = segments[:, 1]
+up_start = segments[:, 2]
 end = segments[:, 3]
 x = np.arange(0, pressure.size)
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=x, y=pressure, mode="markers", name="pressure"))
-fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="start", marker_color="green"))
-fig.add_trace(go.Scatter(x=x[peak], y=pressure[peak], mode="markers", name="peak", marker_color="blue"))
-fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="end", marker_color="red"))
+fig.add_trace(go.Scatter(x=x[start], y=pressure[start], mode="markers", name="down start", marker_color="green"))
+fig.add_trace(go.Scatter(x=x[down_end], y=pressure[down_end], mode="markers", name="down end", marker_color="blue"))
+fig.add_trace(go.Scatter(x=x[up_start], y=pressure[up_start], mode="markers", name="up start", marker_color="darkviolet"))
+fig.add_trace(go.Scatter(x=x[end], y=pressure[end], mode="markers", name="up end", marker_color="red"))
 fig.update_layout(yaxis_title="Pressure (dbar)", xaxis_title="Data index (-)", yaxis_autorange="reversed")
 HTML(fig.to_html(include_plotlyjs='cdn'))
 ```
